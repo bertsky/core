@@ -18,8 +18,9 @@ from pathlib import Path
 import sys
 import tarfile
 import io
-from ocrd.workspace import Workspace
+from deprecated import deprecated
 
+from ocrd.workspace import Workspace
 from ocrd_utils import (
     VERSION as OCRD_VERSION,
     MIMETYPE_PAGE,
@@ -167,6 +168,9 @@ class Processor():
         if not report.is_valid:
             raise Exception("Invalid parameters %s" % report.errors)
         self.parameter = parameter
+        # workaround for deprecated#72 (deprecation does not work for subclasses):
+        setattr(self, 'process',
+                deprecated(version='3.0', reason='process() should be replaced with process_page() and process_workspace()')(getattr(self, 'process')))
 
     def show_help(self, subcommand=None):
         print(generate_processor_help(self.ocrd_tool, processor_instance=self, subcommand=subcommand))
@@ -180,6 +184,7 @@ class Processor():
         """
         return True
 
+    @deprecated(version='3.0', reason='process() should be replaced with process_page() and process_workspace()')
     def process(self) -> None:
         """
         Process the :py:attr:`workspace` 
