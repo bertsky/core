@@ -113,7 +113,11 @@ class TestProcessor(TestCase):
                                     overwrite=True)
 
     def test_params(self):
-        proc = Processor(workspace=self.workspace)
+        class ParamTestProcessor(Processor):
+            @property
+            def ocrd_tool(self):
+                return {}
+        proc = ParamTestProcessor(self.workspace)
         self.assertEqual(proc.parameter, {})
 
     def test_run_agent(self):
@@ -181,7 +185,10 @@ class TestProcessor(TestCase):
             )
 
     def test_zip_input_files(self):
-        class ZipTestProcessor(Processor): pass
+        class ZipTestProcessor(Processor):
+            @property
+            def ocrd_tool(self):
+                return {}
         with pushd_popd(tempdir=True) as tempdir:
             ws = self.resolver.workspace_from_nothing(directory=tempdir)
             ws.add_file('GRP1', mimetype=MIMETYPE_PAGE, file_id='foobar1', page_id='phys_0001')
@@ -201,7 +208,10 @@ class TestProcessor(TestCase):
                     assert ('foobar3', 'foobar4') in tuples
 
     def test_zip_input_files_multi_mixed(self):
-        class ZipTestProcessor(Processor): pass
+        class ZipTestProcessor(Processor):
+            @property
+            def ocrd_tool(self):
+                return {}
         with pushd_popd(tempdir=True) as tempdir:
             ws = self.resolver.workspace_from_nothing(directory=tempdir)
             ws.add_file('GRP1', mimetype=MIMETYPE_PAGE, file_id='foobar1', page_id='phys_0001')
@@ -239,7 +249,10 @@ class TestProcessor(TestCase):
                         tuples = proc.zip_input_files()
 
     def test_zip_input_files_require_first(self):
-        class ZipTestProcessor(Processor): pass
+        class ZipTestProcessor(Processor):
+            @property
+            def ocrd_tool(self):
+                return {}
         self.capture_out_err()
         with pushd_popd(tempdir=True) as tempdir:
             ws = self.resolver.workspace_from_nothing(directory=tempdir)
