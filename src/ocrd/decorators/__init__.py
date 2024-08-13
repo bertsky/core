@@ -47,32 +47,49 @@ def ocrd_cli_wrap_processor(
     # ocrd_network params end #
     **kwargs
 ):
+    # FIXME: remove workspace arg entirely
+    processor = processorClass(None)
     if not sys.argv[1:]:
-        processorClass(None, show_help=True)
+        processor.show_help(subcommand=subcommand)
         sys.exit(1)
-    if dump_json or dump_module_dir or help or version or resolve_resource or show_resource or list_resources:
-        processorClass(
-            None,
-            dump_json=dump_json,
-            dump_module_dir=dump_module_dir,
-            show_help=help,
-            subcommand=subcommand,
-            show_version=version,
-            resolve_resource=resolve_resource,
-            show_resource=show_resource,
-            list_resources=list_resources
-        )
+    if help:
+        processor.show_help(subcommand=subcommand)
+        sys.exit()
+    if version:
+        processor.show_version()
+        sys.exit()
+    if dump_json:
+        processor.dump_json()
+        sys.exit()
+    if dump_module_dir:
+        processor.dump_module_dir()
+        sys.exit()
+    if resolve_resource:
+        try:
+            res = processor.resolve_resource(resolve_resource)
+            print(res)
+            sys.exit()
+        except ResourceNotFoundError as e:
+            log = getLogger('ocrd.processor.base')
+            log.critical(e.message)
+            sys.exit(1)
+    if show_resource:
+        try:
+            processor.show_resource(show_resource)
+            sys.exit()
+        except ResourceNotFoundError as e:
+            log = getLogger('ocrd.processor.base')
+            log.critical(e.message)
+            sys.exit(1)
+    if list_resources:
+        processor.list_resources()
         sys.exit()
     if subcommand or address or queue or database:
         # Used for checking/starting network agents for the WebAPI architecture
         check_and_run_network_agent(processorClass, subcommand, address, database, queue)
 
+    # from here: single-run processing context
     initLogging()
-
-    LOG = getLogger('ocrd.cli_wrap_processor')
-    assert kwargs['input_file_grp'] is not None
-    assert kwargs['output_file_grp'] is not None
-    # LOG.info('kwargs=%s' % kwargs)
     if 'parameter' in kwargs:
         # Disambiguate parameter file/literal, and resolve file
         # (but avoid entering processing context of constructor)
@@ -82,7 +99,7 @@ def ocrd_cli_wrap_processor(
         disposable = DisposableSubclass(None, show_version=True)
         def resolve(name):
             try:
-                return disposable.resolve_resource(name)
+                return processor.resolve_resource(name)
             except ResourceNotFoundError:
                 return None
         kwargs['parameter'] = parse_json_string_or_file(*kwargs['parameter'],
@@ -92,12 +109,11 @@ def ocrd_cli_wrap_processor(
     # Merge parameter overrides and parameters
     if 'parameter_override' in kwargs:
         set_json_key_value_overrides(kwargs['parameter'], *kwargs['parameter_override'])
-    # TODO OCR-D/core#274
     # Assert -I / -O
-    # if not kwargs['input_file_grp']:
-    #     raise ValueError('-I/--input-file-grp is required')
-    # if not kwargs['output_file_grp']:
-    #     raise ValueError('-O/--output-file-grp is required')
+    if not kwargs['input_file_grp']:
+        raise ValueError('-I/--input-file-grp is required')
+    if not kwargs['output_file_grp']:
+        raise ValueError('-O/--output-file-grp is required')
     resolver = Resolver()
     working_dir, mets, _, mets_server_url = \
             resolver.resolve_mets_arguments(working_dir, mets, None, mets_server_url)
