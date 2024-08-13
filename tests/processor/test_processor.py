@@ -35,8 +35,11 @@ class TestProcessor(TestCase):
 
     def test_incomplete_processor(self):
         proc = IncompleteProcessor(None)
+        proc.input_file_grp = 'OCR-D-IMG'
+        proc.output_file_grp = 'DUMMY'
+        proc.page_id = None
         with self.assertRaises(NotImplementedError):
-            proc.process()
+            proc.process_workspace(self.workspace)
 
     def test_no_resolver(self):
         with self.assertRaisesRegex(Exception, 'pass a resolver to create a workspace'):
@@ -79,15 +82,20 @@ class TestProcessor(TestCase):
                 self.assertEqual(processor.parameter['baz'], 'quux')
 
     def test_verify(self):
-        proc = DummyProcessor(self.workspace)
+        proc = DummyProcessor(None)
+        with self.assertRaises(AttributeError):
+            proc.verify()
+        proc.workspace = self.workspace
+        proc.input_file_grp = "OCR-D-IMG"
+        proc.output_file_grp = "DUMMY"
         self.assertEqual(proc.verify(), True)
 
     def test_json(self):
-        DummyProcessor(self.workspace, dump_json=True)
+        DummyProcessor(None).dump_json()
 
     def test_params_missing_required(self):
         with self.assertRaisesRegex(Exception, 'is a required property'):
-            DummyProcessorWithRequiredParameters(workspace=self.workspace)
+            DummyProcessorWithRequiredParameters(None)
 
     def test_params_preset_resolve(self):
         with pushd_popd(tempdir=True) as tempdir:
@@ -117,7 +125,7 @@ class TestProcessor(TestCase):
             @property
             def ocrd_tool(self):
                 return {}
-        proc = ParamTestProcessor(self.workspace)
+        proc = ParamTestProcessor(None)
         self.assertEqual(proc.parameter, {})
 
     def test_run_agent(self):
@@ -197,7 +205,10 @@ class TestProcessor(TestCase):
             ws.add_file('GRP2', mimetype=MIMETYPE_PAGE, file_id='foobar4', page_id='phys_0002')
             for page_id in [None, 'phys_0001,phys_0002']:
                 with self.subTest(page_id=page_id):
-                    proc = ZipTestProcessor(workspace=ws, input_file_grp='GRP1,GRP2', page_id=page_id)
+                    proc = ZipTestProcessor(None)
+                    proc.workspace = ws
+                    proc.input_file_grp = 'GRP1,GRP2'
+                    proc.page_id = page_id
                     tuples = [(one.ID, two.ID) for one, two in proc.zip_input_files()]
                     assert ('foobar1', 'foobar2') in tuples
                     assert ('foobar3', 'foobar4') in tuples
@@ -222,7 +233,10 @@ class TestProcessor(TestCase):
             ws.add_file('GRP2', mimetype='image/tiff', file_id='foobar4', page_id='phys_0002')
             for page_id in [None, 'phys_0001,phys_0002']:
                 with self.subTest(page_id=page_id):
-                    proc = ZipTestProcessor(workspace=ws, input_file_grp='GRP1,GRP2', page_id=page_id)
+                    proc = ZipTestProcessor(None)
+                    proc.workspace = ws
+                    proc.input_file_grp = 'GRP1,GRP2'
+                    proc.page_id = page_id
                     print("unfiltered")
                     tuples = [(one.ID, two.ID) for one, two in proc.zip_input_files()]
                     assert ('foobar1', 'foobar2') in tuples
@@ -233,7 +247,10 @@ class TestProcessor(TestCase):
             ws.add_file('GRP2', mimetype='image/tiff', file_id='foobar4dup', page_id='phys_0002')
             for page_id in [None, 'phys_0001,phys_0002']:
                 with self.subTest(page_id=page_id):
-                    proc = ZipTestProcessor(workspace=ws, input_file_grp='GRP1,GRP2', page_id=page_id)
+                    proc = ZipTestProcessor(None)
+                    proc.workspace = ws
+                    proc.input_file_grp = 'GRP1,GRP2'
+                    proc.page_id = page_id
                     tuples = [(one.ID, two.ID) for one, two in proc.zip_input_files(on_error='first')]
                     assert ('foobar1', 'foobar2') in tuples
                     assert ('foobar3', 'foobar4') in tuples
@@ -244,7 +261,10 @@ class TestProcessor(TestCase):
             ws.add_file('GRP2', mimetype=MIMETYPE_PAGE, file_id='foobar2dup', page_id='phys_0001')
             for page_id in [None, 'phys_0001,phys_0002']:
                 with self.subTest(page_id=page_id):
-                    proc = ZipTestProcessor(workspace=ws, input_file_grp='GRP1,GRP2', page_id=page_id)
+                    proc = ZipTestProcessor(None)
+                    proc.workspace = ws
+                    proc.input_file_grp = 'GRP1,GRP2'
+                    proc.page_id = page_id
                     with self.assertRaisesRegex(Exception, "Multiple PAGE-XML matches for page"):
                         tuples = proc.zip_input_files()
 
@@ -260,7 +280,10 @@ class TestProcessor(TestCase):
             ws.add_file('GRP2', mimetype=MIMETYPE_PAGE, file_id='foobar2', page_id='phys_0001')
             for page_id in [None, 'phys_0001']:
                 with self.subTest(page_id=page_id):
-                    proc = ZipTestProcessor(workspace=ws, input_file_grp='GRP1,GRP2', page_id=page_id)
+                    proc = ZipTestProcessor(None)
+                    proc.workspace = ws
+                    proc.input_file_grp = 'GRP1,GRP2'
+                    proc.page_id = page_id
                     assert [(one, two.ID) for one, two in proc.zip_input_files(require_first=False)] == [(None, 'foobar2')]
         r = self.capture_out_err()
         assert 'ERROR ocrd.processor.base - Found no page phys_0001 in file group GRP1' in r.err
