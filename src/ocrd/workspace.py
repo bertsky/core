@@ -609,7 +609,6 @@ class Workspace():
         Cropping uses a polygon mask (not just the bounding box rectangle).
         Areas outside the polygon will be filled according to ``fill``:
 
-        \b
         - if `"background"` (the default),
           then fill with the median color of the image;
         - else if `"none"`, then avoid masking polygons where possible
@@ -853,7 +852,6 @@ class Workspace():
         Cropping uses a polygon mask (not just the bounding box rectangle).
         Areas outside the polygon will be filled according to `fill`:
 
-        \b
         - if `"background"` (the default),
           then fill with the median color of the image;
         - else if `"none"`, then avoid masking polygons where possible
