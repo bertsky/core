@@ -5,6 +5,8 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [3.0.0a2] - 2024-08-22
+
 Changed:
  - :fire: `OcrdPage` as proxy of `PcGtsType` instead of alias; also contains `etree` and `mapping` now
  - :fire: `Processor.zip_input_files` now can throw `ocrd.NonUniqueInputFile` and `ocrd.MissingInputFile`
@@ -2257,6 +2259,9 @@ Fixed
 Initial Release
 
 <!-- link-labels -->
+
+[3.0.0a2]: ../../compare/v3.0.0a2..v3.0.0a1
+[3.0.0a1]: ../../compare/v3.0.0a1..v2.67.2
 [2.70.0]: ../../compare/v2.70.0..v2.69.0
 [2.69.0]: ../../compare/v2.69.0..v2.68.0
 [2.68.0]: ../../compare/v2.68.0..v2.67.2
