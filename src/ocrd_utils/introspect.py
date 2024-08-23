@@ -34,6 +34,9 @@ def freeze_args(func):
         args = tuple([frozendict(arg) if isinstance(arg, dict) else arg for arg in args])
         kwargs = {k: frozendict(v) if isinstance(v, dict) else v for k, v in kwargs.items()}
         return func(*args, **kwargs)
+    for to_copy in ('cache_info', 'cache_clear'):
+        if hasattr(func, to_copy):
+            setattr(wrapped, to_copy, getattr(func, to_copy))
     return wrapped
 
 
