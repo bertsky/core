@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, ValidationError
 import uvicorn
 
 from ocrd_models import OcrdFile, ClientSideOcrdFile, OcrdAgent, ClientSideOcrdAgent
-from ocrd_utils import getLogger, deprecated_alias
+from ocrd_utils import getLogger
 
 
 #
