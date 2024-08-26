@@ -35,9 +35,8 @@ ocrd-dummy = "ocrd.processor.builtin.dummy_processor:cli"
 
 [tool.setuptools]
 include-package-data = true
-
-[tool.setuptools.package-data]
-"*" = ["*.json", '*.yml', '*.xml', '*.conf', '*.bash', '*.xsd']
+package-dir = {"" = "src"}
+package-data = {"*" = ["*.json", '*.yml', '*.xml', '*.conf', '*.bash', '*.xsd']}
 
 [tool.setuptools.packages.find]
 where = ["src"]
