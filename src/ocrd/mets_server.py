@@ -157,10 +157,9 @@ class ClientSideOcrdMets:
         Request writing the changes to the file system
         """
         if not self.multiplexing_mode:
-            return self.session.request("PUT", url=self.url).text
+            self.session.put(url=self.url)
         else:
-            return self.session.request(
-                "POST",
+            self.session.post(
                 self.url,
                 json=MpxReq.save(self.ws_dir_path)
             ).json()["text"]
@@ -171,10 +170,10 @@ class ClientSideOcrdMets:
         """
         try:
             if not self.multiplexing_mode:
-                return self.session.request("DELETE", self.url).text
+                self.session.delete(self.url)
+                return
             else:
-                return self.session.request(
-                    "POST",
+                self.session.post(
                     self.url,
                     json=MpxReq.stop(self.ws_dir_path)
                 ).json()["text"]
@@ -187,10 +186,9 @@ class ClientSideOcrdMets:
         Request reloading of the mets file from the file system
         """
         if not self.multiplexing_mode:
-            return self.session.request("POST", f"{self.url}/reload").text
+            return self.session.post(f"{self.url}/reload").text
         else:
-            return self.session.request(
-                "POST",
+            return self.session.post(
                 self.url,
                 json=MpxReq.reload(self.ws_dir_path)
             ).json()["text"]
@@ -198,10 +196,9 @@ class ClientSideOcrdMets:
     @property
     def unique_identifier(self):
         if not self.multiplexing_mode:
-            return self.session.request("GET", f"{self.url}/unique_identifier").text
+            return self.session.get(f"{self.url}/unique_identifier").text
         else:
-            return self.session.request(
-                "POST",
+            return self.session.post(
                 self.url,
                 json=MpxReq.unique_identifier(self.ws_dir_path)
             ).json()["text"]
@@ -209,11 +206,10 @@ class ClientSideOcrdMets:
     @property
     def workspace_path(self):
         if not self.multiplexing_mode:
-            self.ws_dir_path = self.session.request("GET", f"{self.url}/workspace_path").text
+            self.ws_dir_path = self.session.get(f"{self.url}/workspace_path").text
             return self.ws_dir_path
         else:
-            self.ws_dir_path = self.session.request(
-                "POST",
+            self.ws_dir_path = self.session.post(
                 self.url,
                 json=MpxReq.workspace_path(self.ws_dir_path)
             ).json()["text"]
@@ -233,10 +229,9 @@ class ClientSideOcrdMets:
     @property
     def file_groups(self):
         if not self.multiplexing_mode:
-            return self.session.request("GET", f"{self.url}/file_groups").json()["file_groups"]
+            return self.session.get(f"{self.url}/file_groups").json()["file_groups"]
         else:
-            return self.session.request(
-                "POST",
+            return self.session.post(
                 self.url,
                 json=MpxReq.file_groups(self.ws_dir_path)
             ).json()["file_groups"]
@@ -244,10 +239,9 @@ class ClientSideOcrdMets:
     @property
     def agents(self):
         if not self.multiplexing_mode:
-            agent_dicts = self.session.request("GET", f"{self.url}/agent").json()["agents"]
+            agent_dicts = self.session.get(f"{self.url}/agent").json()["agents"]
         else:
-            agent_dicts = self.session.request(
-                "POST",
+            agent_dicts = self.session.post(
                 self.url,
                 json=MpxReq.agents(self.ws_dir_path)
             ).json()["agents"]
@@ -258,10 +252,9 @@ class ClientSideOcrdMets:
 
     def add_agent(self, **kwargs):
         if not self.multiplexing_mode:
-            return self.session.request("POST", f"{self.url}/agent", json=OcrdAgentModel.create(**kwargs).dict())
+            return self.session.post(f"{self.url}/agent", json=OcrdAgentModel.create(**kwargs).dict())
         else:
-            self.session.request(
-                "POST",
+            self.session.post(
                 self.url,
                 json=MpxReq.add_agent(self.ws_dir_path, OcrdAgentModel.create(**kwargs).dict())
             ).json()
@@ -278,10 +271,9 @@ class ClientSideOcrdMets:
             kwargs["file_grp"] = kwargs.pop("fileGrp")
 
         if not self.multiplexing_mode:
-            r = self.session.request(method="GET", url=f"{self.url}/file", params={**kwargs})
+            r = self.session.get(url=f"{self.url}/file", params={**kwargs})
         else:
-            r = self.session.request(
-                "POST",
+            r = self.session.post(
                 self.url,
                 json=MpxReq.find_files(self.ws_dir_path, {**kwargs})
             )
@@ -308,13 +300,13 @@ class ClientSideOcrdMets:
         kwargs = {**kwargs, **data.dict()}
 
         if not self.multiplexing_mode:
-            r = self.session.request("POST", f"{self.url}/file", data=kwargs)
-            if not r.ok:
-                raise RuntimeError(f"Failed to add file ({str(data)}): {r.json()}")
+            r = self.session.post(f"{self.url}/file", data=data.dict())
+            if not r:
+                raise RuntimeError("Add file failed. Please check provided parameters")
         else:
-            r = self.session.request("POST", self.url, json=MpxReq.add_file(self.ws_dir_path, kwargs))
-            if not r.ok:
-                raise RuntimeError(f"Failed to add file ({str(data)}): {r.json()[errors]}")
+            r = self.session.post(self.url, json=MpxReq.add_file(self.ws_dir_path, data.dict()))
+            if "error" in r:
+                raise RuntimeError(f"Add file failed: Msg: {r['error']}")
 
         return ClientSideOcrdFile(
             None, fileGrp=file_grp,
