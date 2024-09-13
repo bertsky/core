@@ -234,7 +234,6 @@ class TestProcessor(TestCase):
 
     def test_run_output_missing(self):
         ws = self.workspace
-        from ocrd_utils import config
         # do not raise for number of failures:
         config.OCRD_MAX_MISSING_OUTPUTS = -1
         config.OCRD_MISSING_OUTPUT = 'SKIP'
@@ -244,6 +243,7 @@ class TestProcessor(TestCase):
         # only half succeed
         assert len(ws.mets.find_all_files(fileGrp="OCR-D-OUT")) == len(ws.mets.find_all_files(fileGrp="OCR-D-IMG")) // 2
         config.OCRD_MISSING_OUTPUT = 'ABORT'
+        config.OCRD_EXISTING_OUTPUT = 'OVERWRITE'
         with pytest.raises(Exception) as exc:
             run_processor(DummyProcessorWithOutputFailures, workspace=ws,
                           input_file_grp="OCR-D-IMG",
@@ -266,7 +266,6 @@ class TestProcessor(TestCase):
 
     def test_run_output_timeout(self):
         ws = self.workspace
-        from ocrd_utils import config
         # do not raise for number of failures:
         config.OCRD_MAX_MISSING_OUTPUTS = -1
         config.OCRD_MISSING_OUTPUT = 'ABORT'
@@ -290,7 +289,6 @@ class TestProcessor(TestCase):
             ws = self.resolver.workspace_from_nothing(directory=tempdir)
             ws.add_file('GRP1', mimetype=MIMETYPE_PAGE, file_id='foobar1', page_id='phys_0001')
             ws.add_file('GRP1', mimetype=MIMETYPE_PAGE, file_id='foobar2', page_id='phys_0002')
-            from ocrd_utils import config
             config.OCRD_EXISTING_OUTPUT = 'OVERWRITE'
             ws.add_file('OCR-D-OUT', mimetype=MIMETYPE_PAGE, file_id='OCR-D-OUT_phys_0001', page_id='phys_0001')
             config.OCRD_EXISTING_OUTPUT = 'ABORT'
@@ -426,7 +424,6 @@ class TestProcessor(TestCase):
 
 def test_run_output_metsserver(start_mets_server):
     mets_server_url, ws = start_mets_server
-    from ocrd_utils import config
     # do not raise for number of failures:
     config.OCRD_MAX_MISSING_OUTPUTS = -1
     run_processor(DummyProcessorWithOutputSleep, workspace=ws,
@@ -455,7 +452,6 @@ def test_run_output_metsserver(start_mets_server):
 @pytest.mark.timeout(4)
 def test_run_output_parallel(start_mets_server):
     mets_server_url, ws = start_mets_server
-    from ocrd_utils import config
     # do not raise for single-page timeout
     config.OCRD_PROCESSING_PAGE_TIMEOUT = -1
     # do not raise for number of failures:
