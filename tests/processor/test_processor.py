@@ -1,9 +1,12 @@
+from functools import cached_property
 import json
 from contextlib import ExitStack
 
 from tempfile import TemporaryDirectory
 from pathlib import Path
 from os import environ
+
+from frozendict import frozendict
 from tests.base import CapturingTestCase as TestCase, assets, main, copy_of_directory # pylint: disable=import-error, no-name-in-module
 from tests.data import (
     DummyProcessor,
@@ -148,7 +151,7 @@ class TestProcessor(TestCase):
 
     def test_params_missing_required(self):
         proc = DummyProcessorWithRequiredParameters(None)
-        assert proc.parameter is None
+        assert not proc.parameter
         with self.assertRaisesRegex(ValueError, 'is a required property'):
             proc.parameter = {}
         with self.assertRaisesRegex(ValueError, 'is a required property'):
@@ -185,11 +188,11 @@ class TestProcessor(TestCase):
 
     def test_params(self):
         class ParamTestProcessor(Processor):
-            @property
+            @cached_property
             def ocrd_tool(self):
                 return {}
         proc = ParamTestProcessor(None)
-        self.assertEqual(proc.parameter, None)
+        self.assertEqual(proc.parameter, frozendict({}))
         # get_processor will set to non-none and validate
         proc = get_processor(ParamTestProcessor)
         self.assertEqual(proc.parameter, {})
