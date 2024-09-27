@@ -622,6 +622,12 @@ class Processor():
                 # not PAGE and not an image to generate PAGE for
                 log.error("non-PAGE input for page %s: %s", page_id, err)
         output_file_id = make_file_id(input_files[0], self.output_file_grp)
+        output_file = next(self.workspace.mets.find_files(ID=output_file_id), None)
+        if output_file and config.OCRD_EXISTING_OUTPUT != 'OVERWRITE':
+            # short-cut avoiding useless computation:
+            raise FileExistsError(
+                f"A file with ID=={output_file_id} already exists {output_file} and neither force nor ignore are set"
+            )
         result = self.process_page_pcgts(*input_pcgts, page_id=page_id)
         for image_result in result.images:
             image_file_id = f'{output_file_id}_{image_result.file_id_suffix}'
